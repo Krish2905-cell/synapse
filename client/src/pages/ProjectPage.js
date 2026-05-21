@@ -4,6 +4,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import Navbar from '../components/Navbar';
+
 import KanbanBoard from '../components/KanbanBoard';
 import ChatPanel from '../components/ChatPanel';
 import NotesPanel from '../components/NotesPanel';
@@ -16,7 +17,7 @@ const TAB_ICONS = { Kanban: '📋', Chat: '💬', Notes: '📝', Whiteboard: '�
 export default function ProjectPage() {
   const { projectId } = useParams();
   const { user } = useAuth();
-  const socketRef = useSocket();
+  const { socketRef, socket } = useSocket();
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [activeTab, setActiveTab] = useState('Kanban');
@@ -30,13 +31,18 @@ export default function ProjectPage() {
       .finally(() => setLoading(false));
   }, [projectId, navigate]);
 
+  // Join the project room once the socket is connected.
+  // Depends on `socket` (the instance), not just the ref, so it re-runs
+  // when the socket connects/reconnects — fixing the race condition.
   useEffect(() => {
-    const socket = socketRef?.current;
-    if (socket && projectId) {
-      socket.emit('join:project', projectId);
-      return () => socket.emit('leave:project', projectId);
-    }
-  }, [socketRef, projectId]);
+    if (!socket || !projectId) return;
+    socket.emit('join:project', projectId);
+    console.log('[Socket] Emitted join:project', projectId);
+    return () => {
+      socket.emit('leave:project', projectId);
+      console.log('[Socket] Emitted leave:project', projectId);
+    };
+  }, [socket, projectId]);
 
   const isOwner = project?.owner._id === user._id;
 

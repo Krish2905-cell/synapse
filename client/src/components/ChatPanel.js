@@ -5,7 +5,7 @@ import { useSocket } from '../context/SocketContext';
 
 export default function ChatPanel({ projectId }) {
   const { user } = useAuth();
-  const socketRef = useSocket();
+  const { socketRef, socket } = useSocket();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
@@ -19,12 +19,23 @@ export default function ChatPanel({ projectId }) {
 
   useEffect(() => { fetchMessages(); }, [fetchMessages]);
 
+  // Depend on `socket` instance to avoid the race condition where
+  // socketRef.current was null when the effect first ran.
   useEffect(() => {
-    const socket = socketRef?.current;
     if (!socket) return;
-    socket.on('chat:message', msg => setMessages(prev => [...prev, msg]));
-    return () => socket.off('chat:message');
-  }, [socketRef]);
+    console.log('[ChatPanel] Attaching socket listeners');
+
+    const onMessage = (msg) => {
+      console.log('[ChatPanel] chat:message received', msg._id);
+      setMessages(prev => {
+        if (prev.some(m => m._id === msg._id)) return prev;
+        return [...prev, msg];
+      });
+    };
+
+    socket.on('chat:message', onMessage);
+    return () => socket.off('chat:message', onMessage);
+  }, [socket]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 

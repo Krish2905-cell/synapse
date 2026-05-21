@@ -13,7 +13,7 @@ const COLORS = ['#e2e8f0','#3b5bdb','#ef4444','#f59e0b','#10b981','#8b5cf6','#ec
 
 export default function WhiteboardPanel({ projectId }) {
   const canvasRef = useRef(null);
-  const socketRef = useSocket();
+  const { socketRef, socket } = useSocket();
   const [tool, setTool] = useState('pen');
   const [color, setColor] = useState('#e2e8f0');
   const [lineWidth, setLineWidth] = useState(3);
@@ -38,12 +38,20 @@ export default function WhiteboardPanel({ projectId }) {
     });
   }, [projectId, redraw]);
 
+  // Depend on `socket` instance to avoid the race condition.
   useEffect(() => {
-    const socket = socketRef?.current;
     if (!socket) return;
-    socket.on('whiteboard:update', ({ elements: els }) => { setElements(els); redraw(els); });
-    return () => socket.off('whiteboard:update');
-  }, [socketRef, redraw]);
+    console.log('[WhiteboardPanel] Attaching socket listeners');
+
+    const onUpdate = ({ elements: els }) => {
+      console.log('[WhiteboardPanel] whiteboard:update received, elements:', els.length);
+      setElements(els);
+      redraw(els);
+    };
+
+    socket.on('whiteboard:update', onUpdate);
+    return () => socket.off('whiteboard:update', onUpdate);
+  }, [socket, redraw]);
 
   const getPos = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();

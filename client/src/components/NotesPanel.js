@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../services/api';
+import { useSocket } from '../context/SocketContext';
 
 export default function NotesPanel({ projectId }) {
   const [notes, setNotes] = useState([]);
@@ -7,6 +8,7 @@ export default function NotesPanel({ projectId }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const saveTimer = useRef(null);
+  const { socketRef, socket } = useSocket();
 
   const fetchNotes = useCallback(async () => {
     const res = await api.get(`/projects/${projectId}/notes`);
@@ -16,10 +18,50 @@ export default function NotesPanel({ projectId }) {
 
   useEffect(() => { fetchNotes(); }, [fetchNotes]);
 
+  // Real-time: listen for note changes from other users
+  useEffect(() => {
+    if (!socket) return;
+    console.log('[NotesPanel] Attaching socket listeners');
+
+    const onCreated = (note) => {
+      console.log('[NotesPanel] note:created', note._id);
+      setNotes(prev => {
+        if (prev.some(n => n._id === note._id)) return prev;
+        return [note, ...prev];
+      });
+    };
+
+    const onUpdated = (note) => {
+      console.log('[NotesPanel] note:updated', note._id);
+      setNotes(prev => prev.map(n => n._id === note._id ? note : n));
+      // If the updated note is currently open and the change came from someone else,
+      // update the editor content too
+      setSelected(prev => prev?._id === note._id ? note : prev);
+    };
+
+    const onDeleted = ({ noteId }) => {
+      console.log('[NotesPanel] note:deleted', noteId);
+      setNotes(prev => prev.filter(n => n._id !== noteId));
+      setSelected(prev => prev?._id === noteId ? null : prev);
+    };
+
+    socket.on('note:created', onCreated);
+    socket.on('note:updated', onUpdated);
+    socket.on('note:deleted', onDeleted);
+
+    return () => {
+      socket.off('note:created', onCreated);
+      socket.off('note:updated', onUpdated);
+      socket.off('note:deleted', onDeleted);
+    };
+  }, [socket]);
+
   const createNote = async () => {
     const res = await api.post(`/projects/${projectId}/notes`, { title: 'Untitled Note' });
     setNotes(prev => [res.data, ...prev]);
     setSelected(res.data);
+    // Broadcast to other users
+    socketRef?.current?.emit('note:create', { projectId, note: res.data });
   };
 
   const updateSelected = (field, value) => {
@@ -28,8 +70,10 @@ export default function NotesPanel({ projectId }) {
     clearTimeout(saveTimer.current);
     setSaving(true);
     saveTimer.current = setTimeout(async () => {
-      await api.put(`/projects/${projectId}/notes/${selected._id}`, { [field]: value });
+      const res = await api.put(`/projects/${projectId}/notes/${selected._id}`, { [field]: value });
       setSaving(false);
+      // Broadcast the saved note to other users
+      socketRef?.current?.emit('note:update', { projectId, note: res.data });
     }, 800);
   };
 
@@ -38,6 +82,8 @@ export default function NotesPanel({ projectId }) {
     await api.delete(`/projects/${projectId}/notes/${noteId}`);
     setNotes(prev => prev.filter(n => n._id !== noteId));
     if (selected?._id === noteId) setSelected(null);
+    // Broadcast deletion to other users
+    socketRef?.current?.emit('note:delete', { projectId, noteId });
   };
 
   return (
