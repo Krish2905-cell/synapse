@@ -7,32 +7,80 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Check logged in user on app load
   useEffect(() => {
-    api.get('/auth/me')
-      .then(res => setUser(res.data.user))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+    const checkAuth = async () => {
+      try {
+        const res = await api.get('/auth/me');
+        setUser(res.data.user);
+      } catch (err) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
+  // Login
   const login = async (email, password) => {
-    const res = await api.post('/auth/login', { email, password });
+    const res = await api.post('/auth/login', {
+      email,
+      password,
+    });
+
+    // Store JWT token
+    localStorage.setItem('token', res.data.token);
+
+    // Set user
     setUser(res.data.user);
+
     return res.data;
   };
 
+  // Signup
   const signup = async (name, email, password) => {
-    const res = await api.post('/auth/signup', { name, email, password });
+    const res = await api.post('/auth/signup', {
+      name,
+      email,
+      password,
+    });
+
+    // Store JWT token
+    localStorage.setItem('token', res.data.token);
+
+    // Set user
     setUser(res.data.user);
+
     return res.data;
   };
 
+  // Logout
   const logout = async () => {
-    await api.post('/auth/logout');
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      console.log(err);
+    }
+
+    // Remove token
+    localStorage.removeItem('token');
+
+    // Clear user state
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        signup,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
