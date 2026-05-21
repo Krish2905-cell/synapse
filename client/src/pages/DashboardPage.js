@@ -41,9 +41,19 @@ export default function DashboardPage() {
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 36 }}>
-          <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff' }}>Good morning, {user.name.split(' ')[0]} 👋</h1>
-            <p style={{ color: '#64748b', marginTop: 6, fontSize: 14 }}>Here's what's happening across your projects.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {/* Avatar — reflects uploads instantly via AuthContext */}
+            <div style={s.headerAvatar}>
+              {user.avatar ? (
+                <img src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              ) : (
+                <span style={{ fontSize: 20, fontWeight: 700, color: '#94a3b8' }}>{user.name[0].toUpperCase()}</span>
+              )}
+            </div>
+            <div>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff' }}>Good morning, {user.name.split(' ')[0]} 👋</h1>
+              <p style={{ color: '#64748b', marginTop: 6, fontSize: 14 }}>Here's what's happening across your projects.</p>
+            </div>
           </div>
           <button className="btn-primary" onClick={() => setShowCreate(true)} style={{ width: 'auto', padding: '10px 20px' }}>
             + New Project
@@ -138,4 +148,5 @@ const s = {
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 },
   card: { background: '#161b27', borderRadius: 12, border: '1px solid #1e2535', boxShadow: '0 2px 8px rgba(0,0,0,.3)', padding: 20 },
   skeleton: { height: 150, borderRadius: 12, background: '#1a1f2e' },
+  headerAvatar: { width: 52, height: 52, borderRadius: '50%', background: '#1e2535', border: '2px solid #2d3348', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 },
 };

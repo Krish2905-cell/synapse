@@ -71,6 +71,12 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Update avatar URL in user state after a successful upload
+  // Called by Navbar after the upload API responds — no page reload needed
+  const updateAvatar = (avatarUrl) => {
+    setUser(prev => prev ? { ...prev, avatar: avatarUrl } : prev);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -79,6 +85,7 @@ export const AuthProvider = ({ children }) => {
         login,
         signup,
         logout,
+        updateAvatar,
       }}
     >
       {children}
