@@ -88,7 +88,6 @@ export default function Navbar() {
         <div style={s.logoIcon}>S</div>
         <span style={s.logoText}>Synapse</span>
       </Link>
-
       <div style={{ position: 'relative' }}>
         {/* Hidden file input — triggered by clicking the avatar */}
         <input

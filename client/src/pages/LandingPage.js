@@ -86,6 +86,7 @@ export default function LandingPage() {
           <div style={s.navLinks}>
             <a href="#features" style={s.navLink}>Features</a>
             <a href="#testimonials" style={s.navLink}>Reviews</a>
+            <Link to="/about" style={s.navLink}>About</Link>
             <Link to="/login" style={s.navLink}>Sign in</Link>
             <Link to="/signup" style={s.navCta}>Get started free</Link>
           </div>

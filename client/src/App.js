@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
 import ProjectPage from './pages/ProjectPage';
+import AboutPage from './pages/AboutPage';
 
 // Shows a centered spinner while auth state is resolving
 const Spinner = () => (
@@ -45,6 +46,8 @@ function AppRoutes() {
       <Routes>
         {/* Public landing — authenticated users bounce to dashboard */}
         <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+
+        <Route path="/about" element={<AboutPage />} />
 
         {/* Auth pages — authenticated users bounce to dashboard */}
         <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
