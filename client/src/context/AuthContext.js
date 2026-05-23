@@ -11,7 +11,10 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await api.get('/auth/me');
+        const res = await api.get('/auth/me', {
+          withCredentials: true,
+        });
+
         setUser(res.data.user);
       } catch (err) {
         setUser(null);
@@ -25,10 +28,16 @@ export const AuthProvider = ({ children }) => {
 
   // Login
   const login = async (email, password) => {
-    const res = await api.post('/auth/login', {
-      email,
-      password,
-    });
+    const res = await api.post(
+      '/auth/login',
+      {
+        email,
+        password,
+      },
+      {
+        withCredentials: true,
+      }
+    );
 
     // Store JWT token
     localStorage.setItem('token', res.data.token);
@@ -41,11 +50,17 @@ export const AuthProvider = ({ children }) => {
 
   // Signup
   const signup = async (name, email, password) => {
-    const res = await api.post('/auth/signup', {
-      name,
-      email,
-      password,
-    });
+    const res = await api.post(
+      '/auth/signup',
+      {
+        name,
+        email,
+        password,
+      },
+      {
+        withCredentials: true,
+      }
+    );
 
     // Store JWT token
     localStorage.setItem('token', res.data.token);
@@ -59,7 +74,13 @@ export const AuthProvider = ({ children }) => {
   // Logout
   const logout = async () => {
     try {
-      await api.post('/auth/logout');
+      await api.post(
+        '/auth/logout',
+        {},
+        {
+          withCredentials: true,
+        }
+      );
     } catch (err) {
       console.log(err);
     }
@@ -72,9 +93,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Update avatar URL in user state after a successful upload
-  // Called by Navbar after the upload API responds — no page reload needed
   const updateAvatar = (avatarUrl) => {
-    setUser(prev => prev ? { ...prev, avatar: avatarUrl } : prev);
+    setUser((prev) =>
+      prev ? { ...prev, avatar: avatarUrl } : prev
+    );
   };
 
   return (
