@@ -22,7 +22,7 @@ const initSockets = require('./sockets');
 const app = express();
 const server = http.createServer(app);
 
-const FRONTEND_URL = "https://synapse-beta-olive.vercel.app/";
+const FRONTEND_URL = process.env.CLIENT_URL;
 
 // Socket.io setup
 const io = new Server(server, {
