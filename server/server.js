@@ -21,9 +21,11 @@ const initSockets = require('./sockets');
 const app = express();
 const server = http.createServer(app);
 
+const FRONTEND_URL = "https://synapse-muhalc62y-khushi-gupta-s-projects-0834e047.vercel.app";
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: FRONTEND_URL,
     credentials: true,
   },
 });
@@ -31,17 +33,17 @@ const io = new Server(server, {
 // Connect DB
 connectDB();
 
-// Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: FRONTEND_URL,
   credentials: true,
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 
 
 app.get('/', (req, res) => {
-  res.send('Synapse API is running 🚀');
+  res.send('Synapse API is running ');
 });
 
 // Routes
