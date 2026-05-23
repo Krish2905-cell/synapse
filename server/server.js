@@ -10,6 +10,7 @@ if (process.env.MONGO_URI) {
 } else {
   console.log("MONGO_URI not found");
 }
+
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -21,11 +22,14 @@ const initSockets = require('./sockets');
 const app = express();
 const server = http.createServer(app);
 
-const FRONTEND_URL = "https://synapse-muhalc62y-khushi-gupta-s-projects-0834e047.vercel.app";
+const FRONTEND_URL =
+  "https://synapse-muhalc62y-khushi-gupta-s-projects-0834e047.vercel.app";
 
+// Socket.io setup
 const io = new Server(server, {
   cors: {
-    origin: FRONTEND_URL,
+    origin: [FRONTEND_URL],
+    methods: ["GET", "POST"],
     credentials: true,
   },
 });
@@ -33,17 +37,26 @@ const io = new Server(server, {
 // Connect DB
 connectDB();
 
-app.use(cors({
-  origin: FRONTEND_URL,
-  credentials: true,
-}));
+// CORS Middleware
+app.use(
+  cors({
+    origin: [FRONTEND_URL],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
+// Handle preflight requests
+app.options('*', cors());
+
+// Other Middleware
 app.use(express.json());
 app.use(cookieParser());
 
-
+// Test Route
 app.get('/', (req, res) => {
-  res.send('Synapse API is running ');
+  res.send('Synapse API is running');
 });
 
 // Routes
@@ -60,6 +73,7 @@ app.use('/api/projects/:projectId/whiteboard', require('./routes/whiteboard'));
 initSockets(io);
 
 const PORT = process.env.PORT || 5000;
+
 server.listen(PORT, () => {
   console.log(`Synapse server running on port ${PORT}`);
   console.log('Socket.io initialized ✅');
